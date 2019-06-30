@@ -393,6 +393,13 @@ Include the browser-ready bundle (download from [releases](https://github.com/jb
 
     Says if item is static (won't be draggable, resizable or moved by other items).
 
+* **autoExpandHeight**
+    
+    * type: `Boolean`
+    * required: `false`
+    * default: `false`
+
+    Says auto expand the height when overflow if static is true or isResizable is false
 
 * **dragIgnoreFrom**
     

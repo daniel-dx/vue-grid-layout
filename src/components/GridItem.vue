@@ -89,6 +89,7 @@
     import {setTopLeft, setTopRight, setTransformRtl, setTransform} from '../helpers/utils';
     import {getControlPosition, createCoreData} from '../helpers/draggableUtils';
     import {getDocumentDir} from "../helpers/DOM";
+    import {ResizeSensor} from 'css-element-queries';
     //    var eventBus = require('./eventBus');
 
     let interact = require("interactjs");
@@ -191,6 +192,11 @@
                 required: false,
                 default: 'a, button'
             },
+            autoExpandHeight: {
+                type: Boolean,
+                required: false,
+                default: false
+            }
         },
         inject: ["eventBus"],
         data: function () {
@@ -305,6 +311,15 @@
             }
             this.useCssTransforms = this.$parent.useCssTransforms;
             this.createStyle();
+
+            if ((this.static || !this.isResizable) && this.autoExpandHeight) {
+                const innerElement = this.$slots.default[0].elm;
+                this.$options.minHeight = parseFloat(this.style.height); // record init height
+                new ResizeSensor(innerElement, () => {
+                    if (innerElement.clientHeight > this.$options.minHeight) this.autoSize();
+                    else if (innerElement.clientHeight < this.$options.minHeight && parseFloat(this.style.height) > this.$options.minHeight) this.autoSize({newHeight: this.$options.minHeight}); 
+                });
+            }
         },
         watch: {
             isDraggable: function () {
@@ -649,16 +664,17 @@
              * Given a height and width in pixel values, calculate grid units.
              * @param  {Number} height Height in pixels.
              * @param  {Number} width  Width in pixels.
+             * @param  {Boolean} preciseHeight
              * @return {Object} w, h as grid units.
              */
-            calcWH(height, width) {
+            calcWH(height, width, preciseHeight) {
                 const colWidth = this.calcColWidth();
 
                 // width = colWidth * w - (margin * (w - 1))
                 // ...
                 // w = (width + margin) / (colWidth + margin)
                 let w = Math.round((width + this.margin[0]) / (colWidth + this.margin[0]));
-                let h = Math.round((height + this.margin[1]) / (this.rowHeight + this.margin[1]));
+                let h = preciseHeight ? (height + this.margin[1]) / (this.rowHeight + this.margin[1]) : Math.round((height + this.margin[1]) / (this.rowHeight + this.margin[1]));
 
                 // Capping
                 w = Math.max(Math.min(w, this.cols - this.innerX), 0);
@@ -746,13 +762,13 @@
                     });
                 }
             },
-            autoSize: function() {
+            autoSize: function({newWidth, newHeight} = {}) {
                 // ok here we want to calculate if a resize is needed
                 this.previousW = this.innerW;
                 this.previousH = this.innerH;
 
                 let newSize=this.$slots.default[0].elm.getBoundingClientRect();
-                let pos = this.calcWH(newSize.height, newSize.width);
+                let pos = this.calcWH(newHeight || newSize.height, newWidth || newSize.width, true);
                 if (pos.w < this.minW) {
                     pos.w = this.minW;
                 }
