@@ -1,4 +1,6 @@
 <template>
+    <!-- eslint-disable -->
+    <!-- ignore eslint error: Parsing error: The keyword 'static' is reserved -->
     <div ref="item"
          class="vue-grid-item"
          :class="{ 'vue-resizable' : resizableAndNotStatic, 'static': static, 'resizing' : isResizing, 'vue-draggable-dragging' : isDragging, 'cssTransforms' : useCssTransforms, 'render-rtl' : renderRtl, 'disable-userselect': isDragging, 'no-touch': isAndroid }"
